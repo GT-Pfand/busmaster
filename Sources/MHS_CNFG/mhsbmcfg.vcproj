@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="MHS_CNFG"
 	ProjectGUID="{11160320-BA40-4253-87ED-04EDB9E4021F}"
 	RootNamespace="MHS_CNFG"
@@ -149,7 +149,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/I &quot;$(SolutionDir)/Localization/include&quot;"
-				Optimization="2"
+				Optimization="0"
 				AdditionalIncludeDirectories=".\Res;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\atl71"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MHSBMCFG_EXPORTS"
 				MinimalRebuild="true"

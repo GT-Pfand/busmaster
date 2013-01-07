@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="CAN_IXXAT_VCI"
 	ProjectGUID="{F920F538-A4B0-4EB6-81FC-6011E9C1806F}"
 	RootNamespace="CAN_IXXAT_VCI"
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/I &quot;$(SolutionDir)/Localization/include&quot;"
-				Optimization="2"
+				Optimization="0"
 				AdditionalIncludeDirectories=".; &quot;$(SolutionDir)&quot;; $(IXXAT_VCI_SDK)\inc; ..\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
@@ -69,12 +69,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;$(SolutionDir)/Localization/lib/intl.lib&quot;"
+				AdditionalOptions="&quot;$(SolutionDir)/BIN/Libs/$(OutDir)/Utils.lib&quot;"
 				OutputFile="$(SolutionDir)/bin/$(OutDir)/$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				ModuleDefinitionFile=".\CAN_IXXAT_VCI.def"
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary="$(SolutionDir)/BIN/Libs/$(OutDir)/$(TargetName).lib"
 				TargetMachine="1"

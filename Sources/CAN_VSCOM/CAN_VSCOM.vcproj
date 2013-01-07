@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="CAN_VSCOM"
 	ProjectGUID="{0C047CC0-42B6-4386-A2F0-1DCCE9A2AEFE}"
 	RootNamespace="CAN_VSCOM"
@@ -72,12 +72,12 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="&quot;$(SolutionDir)/BIN/Libs/$(OutDir)/DataTypes.lib&quot;&#x0D;&#x0A;&quot;$(SolutionDir)/BIN/Libs/$(OutDir)/Utils.lib&quot;"
-				AdditionalDependencies="&quot;$(SolutionDir)/BIN/Libs/$(OutDir)/vs_can_api.lib&quot; &quot;$(SolutionDir)/BIN/Libs/$(OutDir)/mhsbmcfg.lib&quot;"
+				AdditionalDependencies="&quot;$(SolutionDir)/BIN/Libs/$(OutDir)/vs_can_api.lib&quot;"
 				OutputFile="$(SolutionDir)/bin/$(OutDir)/CAN_VSCOM.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="C:\WinDDK\7600.16385.1\lib\Mfc\i386;C:\WinDDK\7600.16385.1\lib\ATL\i386"
 				ModuleDefinitionFile=""
-				GenerateDebugInformation="false"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"

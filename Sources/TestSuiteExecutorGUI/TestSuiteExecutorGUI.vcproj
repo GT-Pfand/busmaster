@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="TestSuiteExecutorGUI"
 	ProjectGUID="{F09AE645-8A52-4744-9A37-BAAEB85D2848}"
 	RootNamespace="TestSuiteExecutorGUI"
@@ -45,14 +45,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/I &quot;$(SolutionDir)/Localization/include&quot;"
-				Optimization="2"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\atl71"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_AFXEXT;WINVER=0x0500"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="true"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="TSExecutorGUI_stdafx.h"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="false"

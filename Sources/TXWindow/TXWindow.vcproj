@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="TXWindow"
 	ProjectGUID="{D12A1B79-CA60-4D7F-BA6F-79130C986BF9}"
 	RootNamespace="TXWindow"
@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/I &quot;$(SolutionDir)/Localization/include&quot;"
-				Optimization="2"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;C:\WinDDK\7600.16385.1\inc\mfc42;C:\WinDDK\7600.16385.1\inc\atl71"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_AFXEXT;WINVER=0x0500"
 				MinimalRebuild="true"

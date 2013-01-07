@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DIL_Interface", "DIL_Interface\DIL_Interface.vcproj", "{77290670-1DBD-4127-8BAD-7C09990FA5AE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EFB39D0A-C032-436C-81FB-7A02C7851D00} = {EFB39D0A-C032-436C-81FB-7A02C7851D00}
@@ -480,7 +480,6 @@ Global
 		{11A11CEA-45ED-4FE6-BDE2-643DF9267FAC}.Unicode Release|Win32.Build.0 = Release|Win32
 		{11160320-BA40-4253-87ED-04EDB9E4021F}.busmaster_debug|Win32.ActiveCfg = busmaster_debug|Win32
 		{11160320-BA40-4253-87ED-04EDB9E4021F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{11160320-BA40-4253-87ED-04EDB9E4021F}.Debug|Win32.Build.0 = Debug|Win32
 		{11160320-BA40-4253-87ED-04EDB9E4021F}.Release|Win32.ActiveCfg = Release|Win32
 		{11160320-BA40-4253-87ED-04EDB9E4021F}.Unicode Debug|Win32.ActiveCfg = Debug|Win32
 		{11160320-BA40-4253-87ED-04EDB9E4021F}.Unicode Release MinSize|Win32.ActiveCfg = Release|Win32
@@ -514,8 +513,8 @@ Global
 		{4890AE40-CF77-41F3-BBC6-066AE26DF77C}.Unicode Release|Win32.ActiveCfg = Release|Win32
 		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.busmaster_debug|Win32.ActiveCfg = busmaster_debug|Win32
 		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.busmaster_debug|Win32.Build.0 = busmaster_debug|Win32
-		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Debug|Win32.ActiveCfg = Unicode Debug|Win32
-		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Debug|Win32.Build.0 = Unicode Debug|Win32
+		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Debug|Win32.ActiveCfg = Unicode Release MinSize|Win32
+		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Debug|Win32.Build.0 = Unicode Release MinSize|Win32
 		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Release|Win32.ActiveCfg = Unicode Release MinSize|Win32
 		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Release|Win32.Build.0 = Unicode Release MinSize|Win32
 		{9D8AF453-01BC-44C9-9753-568BCEA38D4E}.Unicode Debug|Win32.ActiveCfg = Unicode Debug|Win32
@@ -527,6 +526,7 @@ Global
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.busmaster_debug|Win32.ActiveCfg = busmaster_debug|Win32
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.busmaster_debug|Win32.Build.0 = busmaster_debug|Win32
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.Debug|Win32.Build.0 = Debug|Win32
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.Release|Win32.ActiveCfg = Release|Win32
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.Release|Win32.Build.0 = Release|Win32
 		{F920F538-A4B0-4EB6-81FC-6011E9C1806F}.Unicode Debug|Win32.ActiveCfg = Debug|Win32
