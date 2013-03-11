@@ -108,3 +108,4 @@
 #define def_NAME_SEND           "Send"
 #define def_NAME_VERIFY         "verify"
 #define def_NAME_VERIFYRESPONSE "verifyResponse"
+#define def_NAME_VERIFY_DLC "verifyDlc"

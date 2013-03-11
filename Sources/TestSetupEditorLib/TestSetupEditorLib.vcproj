@@ -282,6 +282,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VerifyMessageDlc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VerifyMessageDlcEntity.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VerifyResponse.cpp"
 				>
 			</File>
@@ -336,6 +344,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VerifyMessageDlc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VerifyMessageDlcEntity.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VerifyResponse.h"
 				>
 			</File>
@@ -350,6 +366,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

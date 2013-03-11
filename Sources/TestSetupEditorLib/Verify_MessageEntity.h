@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "VerifyEntity.h"
 #include "BaseEntityTA.h"
 #include "TSdefinitions.h"
 
@@ -54,7 +55,7 @@ public:
 };
 typedef CList<CVerify_MessageData, CVerify_MessageData&> CVerify_MessageDataList;
 
-class CVerify_MessageEntity : public CBaseEntityTA
+class CVerify_MessageEntity : public CVerifySubEntity
 {
 
 private:
@@ -87,17 +88,4 @@ public:
 private:
     void vRetriveConditionSignalValue(IXMLDOMNode* pIDOMSChildSignal, CSignalCondition& ouSignalCondition);
     INT vUpdateSignals(CVerify_MessageData& ouData);
-};
-
-typedef CList<CVerify_MessageEntity, CVerify_MessageEntity&> CVerify_MessageEntityList;
-class CVerifyData
-{
-
-public:
-    CVerifyData();
-    virtual ~CVerifyData();
-    eERROR_ATTRIBUTE m_eAttributeError;
-    CVerify_MessageEntityList m_odVerify_MessageEntityList;
-    CVerifyData& operator=(const CVerifyData& RefObj);
-
 };

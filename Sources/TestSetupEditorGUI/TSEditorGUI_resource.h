@@ -35,8 +35,9 @@
 #define IDM_ADD_VERIFY                  3013
 #define IDC_ROW2_COL                    3013
 #define IDM_ADD_WAIT                    3014
-#define IDM_ADD_VERIFYRESPONSE            3015
-#define IDM_ADD_REPLAY                  3016
+#define IDM_ADD_VERIFYRESPONSE          3015
+#define IDM_ADD_VERIFYDLC               3016
+//#define IDM_ADD_REPLAY                  3016
 #define IDM_DELETE                      3017
 #define IDS_HELP_TESTSETUP              3020
 #define IDS_HELP_TESTCASE               3021
@@ -64,3 +65,4 @@
 #define ID_DISPLAY_SETTINGS             32790
 #define IDM_HELP_ABOUTTESTSETUPEDITOR   32791
 #define IDM_FILE_VALIDATE               32792
+

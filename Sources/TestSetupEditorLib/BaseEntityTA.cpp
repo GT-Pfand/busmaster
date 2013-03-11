@@ -431,10 +431,10 @@ Date Created   :  02/06/2011
 Modifications  :
 Code Tag       :
 ******************************************************************************/
-HRESULT CBaseEntityTA::GetEntityData(eTYPE_ENTITY /*eCurrEntityType*/, void* /*pvEntityData*/)
+/*HRESULT CBaseEntityTA::GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData)
 {
     return ERR_NOT_IMPLEMENTED;
-}
+}*/
 
 /******************************************************************************
 Function Name  :  SetEntityData

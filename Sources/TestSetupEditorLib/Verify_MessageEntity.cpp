@@ -391,65 +391,6 @@ HRESULT CVerify_MessageEntity::ValidateEntity(CString& /*omStrResult*/)
     return ERR_NOT_IMPLEMENTED;
 }
 
-/******************************************************************************
-Function Name  :  CVerifyData
-Input(s)       :  -
-Output         :  -
-Functionality  :  Constructor
-Member of      :  CVerifyData
-Friend of      :  -
-Author(s)      :  Venkatanarayana Makam
-Date Created   :  06/04/2011
-Modifications  :  CS029
-******************************************************************************/
-CVerifyData::CVerifyData(void)
-{
-    m_odVerify_MessageEntityList.RemoveAll();
-    m_eAttributeError = ERRORS;
-}
-
-
-/******************************************************************************
-Function Name  :  ~CVerifyData
-Input(s)       :  -
-Output         :  -
-Functionality  :  Destructor
-Member of      :  CVerifyData
-Friend of      :  -
-Author(s)      :  Venkatanarayana Makam
-Date Created   :  06/04/2011
-Modifications  :
-******************************************************************************/
-CVerifyData::~CVerifyData(void)
-{
-}
-
-/******************************************************************************
-Function Name  :  operator=
-Input(s)       :  CVerifyData& RefObj
-Output         :  CVerifyData&
-Functionality  :  = operator overloading
-Member of      :  CVerifyData
-Friend of      :  -
-Author(s)      :  Venkatanarayana Makam
-Date Created   :  06/04/2011
-Modifications  :
-******************************************************************************/
-CVerifyData& CVerifyData::operator=(const CVerifyData& RefObj)
-{
-    m_odVerify_MessageEntityList.RemoveAll();
-    m_eAttributeError = RefObj.m_eAttributeError;
-    INT Count = (INT)RefObj.m_odVerify_MessageEntityList .GetCount();
-    for(int i=0; i<Count; i++)
-    {
-        POSITION pos = RefObj.m_odVerify_MessageEntityList.FindIndex(i);
-        //m_odVerify_MessageEntityList.AddTail(RefObj.m_odVerify_MessageEntityList.GetAt(pos));
-        CVerify_MessageEntity msg = RefObj.m_odVerify_MessageEntityList.GetAt(pos);
-        m_odVerify_MessageEntityList.AddTail(msg);
-    }
-    return *this;
-}
-
 
 /******************************************************************************
 Function Name  :  CVerify_MessageData
@@ -493,7 +434,7 @@ Function Name  :  GetSignalCondition
 Input(s)       :  CString& omStrSignal
                   CString& omSignalCondition
 Output         :  HRESULT
-Functionality  :  Retrives the signal Condition from signal name
+Functionality  :  Retrives the signal Condition from signal name (bullshit, retrieves the condition for a signal if a condition was setup in the test case)
 Member of      :  CVerify_MessageData
 Friend of      :  -
 Author(s)      :  Venkatanarayana Makam

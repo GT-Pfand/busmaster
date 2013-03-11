@@ -376,11 +376,11 @@ HRESULT CTSExecutionCAN::TSX_VerifyResponse(CBaseEntityTA* pEntity, CResultVerif
         CString omStrCount;
         if(m_LastCanMsg != -1)
         {
-            omStrCount.Format(_("SUCCESS COUNT %d"), m_MsgVerifiedList.GetCount());
+			omStrCount.Format(_("Failed, Messages verified: %d"), m_MsgVerifiedList.GetCount());
         }
         else
         {
-            omStrCount.Format(_("No Message  has Recieved"));
+            omStrCount.Format(_("No Message has been received"));
         }
         hResultTC = S_FALSE;
         TSX_DisplayResult(omStrCount);
@@ -412,14 +412,14 @@ HRESULT CTSExecutionCAN::TSX_VerifyMessage(CBaseEntityTA* pEntity, CResultVerify
     CVerify_MessageData ouVerifyData;
     CString omResult;
     sMESSAGE sMsg;
-    CVerifyData ouVerify;
+    CVerifyData *ouVerify;
     CSignalInfoArray ouSignalInfo;
 
     pEntity->GetSubEntryCount(unVerifyCount);
     ouVerifyResult.m_MessageResultList.RemoveAll();
 
     pEntity->GetEntityData(VERIFY, &ouVerify);
-    ouVerifyResult.m_eResult = ouVerify.m_eAttributeError;
+    ouVerifyResult.m_eResult = ouVerify->m_eAttributeError;
     //Loop For all Messages
     for(UINT j=0; j<unVerifyCount; j++)
     {
@@ -470,7 +470,7 @@ HRESULT CTSExecutionCAN::TSX_VerifyMessage(CBaseEntityTA* pEntity, CResultVerify
 Function Name  :  bVerifyCanMessage
 Input(s)       :
 Output         :  BOOL
-Functionality  :
+Functionality  :  Verify data contains the information how the message is to be verified. signalInfo contains the received message, MsgResult saves the detailed results.
 Member of      :  CTSExecutionCAN
 Friend of      :  -
 Author(s)      :  Venkatanarayana Makam
@@ -623,4 +623,94 @@ BOOL CTSExecutionCAN::bMakeCanMessage(sMESSAGE*& pMsg, CSend_MessageData& ouSend
     stCanMsg.m_ucRTR = (pMsg->m_unNumberOfSignals>0)? 0 : 1;        //TODO:CheckThis
     stCanMsg.m_unMsgID = pMsg->m_unMessageCode;
     return TRUE;
+}
+
+/******************************************************************************
+Function Name  :  TSX_VerifyResponse
+Input(s)       :
+Output         :  HRESULT
+Functionality  :
+Member of      :  CTSExecutionCAN
+Friend of      :  -
+Author(s)      :  Venkatanarayana Makam
+Date Created   :  25/04/2011
+Modifications  :
+Code Tag       :
+******************************************************************************/
+HRESULT CTSExecutionCAN::TSX_VerifyMessageDlc(CBaseEntityTA* pEntity, CResultVerify& ouVerifyResult)
+{
+	UCHAR *pucData;
+    STCANDATA sCanData;
+    UINT unVerifyCount;
+    CBaseEntityTA* pVerifyEntity;
+	CVerifyMessageDlcVerifyData ouVerifyData;
+    CString omResult;
+    sMESSAGE sMsg;
+    CVerifyData *ouVerify;
+    CSignalInfoArray ouSignalInfo;
+
+	// assume the test will pass
+    HRESULT hResult = S_OK;
+
+    pEntity->GetSubEntryCount(unVerifyCount);
+    ouVerifyResult.m_MessageResultList.RemoveAll();
+
+    pEntity->GetEntityData(VERIFY_DLC, &ouVerify);
+    ouVerifyResult.m_eResult = ouVerify->m_eAttributeError;
+
+	//loop over all added submessages
+    for(UINT j = 0; j < unVerifyCount; j++)
+    {
+        pEntity->GetSubEntityObj(j, &pVerifyEntity);
+        pVerifyEntity->GetEntityData(VERIFY_MESSAGE_DLC, &ouVerifyData);
+
+        if(m_ouCanBufVFSE.ReadFromBuffer(&sCanData, (__int64) ouVerifyData.m_dwMessageID) == 0)
+        {
+            pucData = new UCHAR[sCanData.m_uDataInfo.m_sCANMsg.m_ucDataLen];
+            memcpy(pucData, &sCanData.m_uDataInfo.m_sCANMsg.m_ucData, sCanData.m_uDataInfo.m_sCANMsg.m_ucDataLen);
+        }
+        else
+        {
+            pucData = new UCHAR[8];
+            memset(pucData, 0, 8);
+        }
+
+        //evaluate the message
+        SMSGENTRY* sMsgEntry = new SMSGENTRY;
+        pEntity->m_ouDataBaseManager.nGetMessageInfo(ouVerifyData.m_omMessageName, sMsg);
+
+        sMsgEntry->m_psMsg = &sMsg;
+        sMsgEntry->m_psNext = NULL;
+        m_ouMsgInterpret.vSetMessageList(sMsgEntry);
+        m_ouMsgInterpret.bInterpretMsgs(ouVerifyData.m_dwMessageID, pucData, ouSignalInfo);
+
+		CString strVerDisplay = _("Verifying Message dlc ") + ouVerifyData.m_omMessageName;
+        TSX_DisplayMessage(strVerDisplay);
+
+		//"Msg" is the database information about the message
+		//sCanData is the received message
+		//"SignalInfo" are the interpreted message signals (it is an array), derived from CanData
+		//"VerifyData" is the testcase
+
+		CMessageResult ouMsgResult;
+
+		omResult = _("SUCCESS");
+		ouMsgResult.m_omMessage = ouVerifyData.m_omMessageName + _("SUCCESS");
+		SINTERPRETSIGNALINFO *innerInfo = ouSignalInfo.GetData();
+		if (sMsg.m_unMessageLength != sCanData.m_uDataInfo.m_sCANMsg.m_ucDataLen) {
+	        omResult = _("FAIL");
+            hResult = S_FALSE;
+			ouMsgResult.m_omMessage = ouVerifyData.m_omMessageName + _("FAIL");
+		}
+
+        ouVerifyResult.m_MessageResultList.AddTail(ouMsgResult);
+        TSX_DisplayResult(omResult);
+		delete[] pucData;
+    }
+    if( S_FALSE != hResult )
+    {
+        ouVerifyResult.m_eResult = SUCCESS;
+    }
+    return hResult;
+
 }

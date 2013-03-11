@@ -22,20 +22,20 @@
 #pragma once
 
 #include "VerifyEntity.h"
+#include "Verify_MessageEntity.h"
 
-typedef CMap<UINT, UINT, CVerify_MessageData, CVerify_MessageData&> CVerifyMsgMap;
+typedef CMap<UINT, UINT, CVerify_MessageData, CVerify_MessageData&> CVerifyMessageResponseMap;
 
-class CVerifyResponseData
+class CVerifyResponseData : public CVerifyData
 {
 public:
-    CVerifyData m_VerifyData;
     USHORT m_ushDuration;
 };
 
 class CVerifyResponse : public CVerifyEntity
 {
 public:
-    CVerifyMsgMap m_ouVerifyMsgMap;
+    CVerifyMessageResponseMap m_ouVerifyMsgMap;
     USHORT m_ushDuration;
 public:
     CVerifyResponse(void);
@@ -45,13 +45,14 @@ public:
     //HRESULT DeleteSubEntry(CBaseEntityTA* pouSubEntryObj);
     //HRESULT DeleteSubEntry(INT index);
     HRESULT GetData(MSXML2::IXMLDOMNodePtr& pIDomNode);
-    HRESULT GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData);
+    virtual HRESULT GetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData);
     eTYPE_ENTITY GetEntityType(void);
+	HRESULT GetSubEntityData(CVerifySubEntity **odVerifySubEntity,MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity);
     //const HRESULT GetSubEntityObj(UINT unIndex, CBaseEntityTA**  pouSubEntity);
     //HRESULT GetSubEntryCount(UINT& unTotal);
     //HRESULT RepositionSubEntity(CBaseEntityTA* pouRefSubEntity, CBaseEntityTA* pouCurrSubEntity);
     HRESULT SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode);
-    HRESULT SetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData);
+    virtual HRESULT SetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData);
     HRESULT GetMessageFromId(UINT& unId, CVerify_MessageData* ouData);
     HRESULT ValidateEntity(CString& omStrResult);
     virtual ~CVerifyResponse(void);

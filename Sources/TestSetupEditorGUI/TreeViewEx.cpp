@@ -78,7 +78,8 @@ BEGIN_MESSAGE_MAP(CTreeViewEx, CTreeView)
     ON_COMMAND(IDM_EXPAND_ALL, vExpandFull)
     ON_COMMAND(IDM_SETTINGS_CLR, OnBKGColor)
     ON_COMMAND(IDM_COLLAPSE_ALL, vCollapseFull)
-    ON_COMMAND_RANGE(IDM_ADD_TESTCASE, IDM_ADD_REPLAY, OnAddEntityItem)
+	//ON_COMMAND(IDM_ADD_VERIFYDLC, OnAddEntityItem)
+    ON_COMMAND_RANGE(IDM_ADD_TESTCASE, IDM_ADD_VERIFYDLC, OnAddEntityItem)
 
     ON_NOTIFY_REFLECT(NM_RCLICK, OnNMRclick)
     ON_NOTIFY_REFLECT(TVN_BEGINDRAG, OnTvnBegindrag)
@@ -1007,6 +1008,7 @@ void CTreeViewEx::OnNMRclick(NMHDR* /*pNMHDR*/, LRESULT* pResult)
             omSubMenu.AppendMenu(MF_STRING, IDM_ADD_VERIFY, _("Verify"));
             omSubMenu.AppendMenu(MF_STRING, IDM_ADD_WAIT, _("Wait"));
             omSubMenu.AppendMenu(MF_STRING, IDM_ADD_VERIFYRESPONSE, _("verfiyResponse"));
+            omSubMenu.AppendMenu(MF_STRING, IDM_ADD_VERIFYDLC, _("verifyDlc"));
             //omSubMenu.AppendMenu(MF_STRING, IDM_ADD_REPLAY, _T("Replay"));
             omContextMenu.AppendMenu(MF_POPUP, (UINT_PTR)omSubMenu.m_hMenu, _("New"));
             omContextMenu.AppendMenu(MF_STRING, IDM_DELETE, _("Delete"));
@@ -1402,16 +1404,19 @@ void CTreeViewEx::OnAddEntityItem(UINT nId)
             eEntityType = VERIFY;
             break;
 
-        case IDM_ADD_REPLAY:
+        /*case IDM_ADD_REPLAY:
             eEntityType = REPLAY;
             break;
-
+*/
         case IDM_ADD_WAIT:
             eEntityType = WAIT;
             break;
         case IDM_ADD_VERIFYRESPONSE:
             eEntityType = VERIFYRESPONSE;
             break;
+		case IDM_ADD_VERIFYDLC:
+			eEntityType = VERIFY_DLC;
+			break;
         default:
             return;
     }

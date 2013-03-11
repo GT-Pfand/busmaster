@@ -42,7 +42,7 @@ public:
     virtual HRESULT DeleteSubEntry(CBaseEntityTA* pouSubEntryObj);
     virtual HRESULT DeleteSubEntry(INT index);
     virtual HRESULT GetData(MSXML2::IXMLDOMNodePtr& /*pIDomNode*/);
-    virtual HRESULT GetEntityData(eTYPE_ENTITY /*eCurrEntityType*/, void* /*pvEntityData*/);
+    virtual HRESULT GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData) = 0;
     virtual const HRESULT GetSubEntityObj(UINT unIndex, CBaseEntityTA**  pouSubEntity);
     virtual HRESULT GetSubEntryCount(UINT& unTotal);
     virtual HRESULT RepositionSubEntity(CBaseEntityTA* pouRefSubEntity, CBaseEntityTA* pouCurrSubEntity);

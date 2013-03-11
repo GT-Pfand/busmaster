@@ -22,26 +22,62 @@
 #pragma once
 
 #include "TestCaseEntity.h"
-#include "Verify_MessageEntity.h"
+//#include "Verify_MessageEntity.h"
+//#include "VerifyMessageDlcEntity.h"
+#include <vector>
+
+class CVerifySubEntity : public CBaseEntityTA
+{
+public: 
+	//static HRESULT GetData(CVerifySubEntity **odVerifySubEntity,MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity);
+};
+
+//typedef CList<CVerifySubEntity, CVerifySubEntity*> CVerifySubEntityList;
+
+/*class CVerifyData
+{
+
+public:
+    //virtual ~CVerifyData() = 0;
+    eERROR_ATTRIBUTE m_eAttributeError;
+    vector<CVerifySubEntity *> m_odVerifySubEntityList;
+    //CVerifyData& operator=(const CVerifyData& RefObj);
+
+};*/
+
+class CVerifyData
+{
+
+public:
+    CVerifyData();
+    virtual ~CVerifyData();
+    eERROR_ATTRIBUTE m_eAttributeError;
+    vector<CVerifySubEntity *> m_odVerifySubEntityList;
+    CVerifyData& operator=(const CVerifyData& RefObj);
+	//CVerifyData *m_VerifyData;
+};
+
 class CVerifyEntity : public CBaseEntityTA
 {
 public:
-    CVerifyData m_ouData;
+    CVerifyData *m_ouData;
 public:
     CVerifyEntity(void);
     CVerifyEntity& operator= (CVerifyEntity& RefObj);
     CVerifyEntity(const CVerifyEntity& RefObj);
     virtual HRESULT AddSubEntry(CBaseEntityTA* pouSubEntryObj);
     virtual HRESULT DeleteSubEntry(CBaseEntityTA* pouSubEntryObj);
-    virtual HRESULT DeleteSubEntry(INT index);
-    HRESULT GetData(MSXML2::IXMLDOMNodePtr& pIDomNode);
-    HRESULT GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData);
+    virtual HRESULT DeleteSubEntry(unsigned int  index);
+    virtual HRESULT GetSubEntityData(CVerifySubEntity **odVerifySubEntity,MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity);
+	virtual HRESULT GetData(MSXML2::IXMLDOMNodePtr& pIDomNode);
+	virtual HRESULT GetCommonVerifyData(MSXML2::IXMLDOMNodePtr& pIDomNode, CVerifyData *verifyData);
+    virtual HRESULT GetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData);
     eTYPE_ENTITY GetEntityType(void);
-    virtual const HRESULT GetSubEntityObj(UINT unIndex, CBaseEntityTA**  pouSubEntity);
+    virtual const HRESULT GetSubEntityObj(UINT unIndex, CBaseEntityTA **pouSubEntity);
     virtual HRESULT GetSubEntryCount(UINT& unTotal);
     virtual HRESULT RepositionSubEntity(CBaseEntityTA* pouRefSubEntity, CBaseEntityTA* pouCurrSubEntity);
     HRESULT SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode);
-    HRESULT SetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData);
+    virtual HRESULT SetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData);
     HRESULT ValidateEntity(CString& omStrResult);
     virtual ~CVerifyEntity(void);
 };

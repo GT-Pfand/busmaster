@@ -42,6 +42,8 @@ Modifications  :
 CVerifyResponse::CVerifyResponse(void)
 {
     m_eType = VERIFYRESPONSE;
+	this->m_ouData = new CVerifyResponseData();
+	((CVerifyResponseData *) this->m_ouData)->m_ushDuration = 0;
 }
 
 
@@ -77,13 +79,12 @@ CVerifyResponse::CVerifyResponse(const CVerifyResponse& RefObj)
     m_ushDuration = RefObj.m_ushDuration;
     m_ouVerifyMsgMap.RemoveAll();
 
-    INT nCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    INT nCount = (INT)m_ouData->m_odVerifySubEntityList.size();
     for(int i = 0; i < nCount; i++)
     {
         CVerify_MessageData ouVerifyData;
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouVerifyEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        ouVerifyEntity.GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
+        CVerify_MessageEntity *ouVerifyEntity = (CVerify_MessageEntity *) m_ouData->m_odVerifySubEntityList[i];
+        ouVerifyEntity->GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
         m_ouVerifyMsgMap[ouVerifyData.m_dwMessageID] = ouVerifyData;
     }
 }
@@ -105,13 +106,12 @@ CVerifyResponse& CVerifyResponse::operator= (CVerifyResponse& RefObj)
     m_ushDuration = RefObj.m_ushDuration;
     m_ouVerifyMsgMap.RemoveAll();
 
-    INT nCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    INT nCount = (INT)m_ouData->m_odVerifySubEntityList.size();
     for(int i = 0; i < nCount; i++)
     {
         CVerify_MessageData ouVerifyData;
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouVerifyEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        ouVerifyEntity.GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
+        CVerify_MessageEntity *ouVerifyEntity = (CVerify_MessageEntity *) m_ouData->m_odVerifySubEntityList[i];
+        ouVerifyEntity->GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
         m_ouVerifyMsgMap[ouVerifyData.m_dwMessageID] = ouVerifyData;
     }
     return *this;
@@ -131,7 +131,8 @@ Modifications  :
 ******************************************************************************/
 HRESULT CVerifyResponse::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
 {
-    CVerifyEntity::GetData(pIDomNode);
+	CVerifyResponseData *verifyResponseData = new CVerifyResponseData();
+    this->GetCommonVerifyData(pIDomNode, verifyResponseData);
 
     _bstr_t bstrNodeName = def_STR_VERIFYMSG_NODE;
     CComVariant NodeValue;
@@ -148,14 +149,14 @@ HRESULT CVerifyResponse::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
 
     //W4 Removal
     m_ushDuration = (USHORT)atoi((LPCSTR)strTemp);
+	verifyResponseData->m_ushDuration = m_ushDuration;
 
-    INT nCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    INT nCount = (INT)m_ouData->m_odVerifySubEntityList.size();
     for(int i = 0; i < nCount; i++)
     {
         CVerify_MessageData ouVerifyData;
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouVerifyEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        ouVerifyEntity.GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
+        CVerify_MessageEntity *ouVerifyEntity = (CVerify_MessageEntity *) m_ouData->m_odVerifySubEntityList[i];
+        ouVerifyEntity->GetEntityData(VERIFY_MESSAGE, &ouVerifyData);
         m_ouVerifyMsgMap[ouVerifyData.m_dwMessageID] = ouVerifyData;
     }
     return S_OK;
@@ -171,12 +172,15 @@ Author(s)      :  Venkatanarayana Makam
 Date Created   :  06/04/2011
 Modifications  :
 ******************************************************************************/
-HRESULT CVerifyResponse::GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData)
+HRESULT CVerifyResponse::GetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData)
 {
     if(eCurrEntityType == VERIFYRESPONSE && pvEntityData != NULL)
     {
-        ((CVerifyResponseData*)pvEntityData)->m_VerifyData = m_ouData;
-        ((CVerifyResponseData*)pvEntityData)->m_ushDuration = m_ushDuration;
+		//CVerifyResponseData *verifyResponseData = new CVerifyResponseData();
+		*((CVerifyResponseData **)pvEntityData) = (CVerifyResponseData *) m_ouData;
+		//*((void **)pvEntityData) = m_ouData;
+		//((CVerifyResponseData *) pvEntityData)->m_ushDuration = m_ushDuration;
+		//*pvEntityData = verifyResponseData;
     }
     return  S_OK;
 }
@@ -214,12 +218,12 @@ HRESULT CVerifyResponse::SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode)
     pIDOMDoc.CreateInstance(L"Msxml2.DOMDocument");
 
 
-    INT lCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    INT lCount = (INT)m_ouData->m_odVerifySubEntityList.size();
     MSXML2::IXMLDOMElementPtr pIDomSendNode =  pIDOMDoc->createElement(_bstr_t(def_STR_VERIFYRES_NODE));
     MSXML2::IXMLDOMAttributePtr pIDomTSAtrrib = pIDOMDoc->createAttribute(def_STR_ATTRIB_FAIL);
     if(pIDomTSAtrrib!= NULL)
     {
-        switch(m_ouData.m_eAttributeError)
+        switch(m_ouData->m_eAttributeError)
         {
             case SUCCESS:
                 omstrTemp = "SUCCESS";
@@ -250,9 +254,8 @@ HRESULT CVerifyResponse::SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode)
 
     for(INT i=0; i<lCount; i++)
     {
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouVerifyMsgEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        ouVerifyMsgEntity.SetData(pIDomSendNode);
+        CVerify_MessageEntity *ouVerifyMsgEntity = (CVerify_MessageEntity *) m_ouData->m_odVerifySubEntityList[i];
+        ouVerifyMsgEntity->SetData(pIDomSendNode);
     }
     pIDomTestCaseNode->appendChild(pIDomSendNode);
 
@@ -271,11 +274,11 @@ Date Created   :  06/04/2011
 Modifications  :
 Codetag        :
 ******************************************************************************/
-HRESULT CVerifyResponse::SetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntityData)
+HRESULT CVerifyResponse::SetEntityData(eTYPE_ENTITY eCurrEntityType, void *pvEntityData)
 {
     if(eCurrEntityType == VERIFYRESPONSE && pvEntityData != NULL)
     {
-        m_ouData = ((CVerifyResponseData*)pvEntityData)->m_VerifyData;
+        m_ouData = (CVerifyData *) pvEntityData;
         m_ushDuration = ((CVerifyResponseData*)pvEntityData)->m_ushDuration;
     }
     return  S_OK;
@@ -295,19 +298,15 @@ Code Tag       :
 HRESULT CVerifyResponse::GetMessageFromId(UINT& unId, CVerify_MessageData* ouData)
 {
     //W4 Removal
-    UINT nCount = (UINT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    UINT nCount = (UINT)m_ouData->m_odVerifySubEntityList.size();
     for(UINT i=0; i<nCount; i++)
     {
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        if(pos != NULL)
-        {
-            CVerify_MessageEntity& VerifyMsgentity = (m_ouData.m_odVerify_MessageEntityList.GetAt(pos));
-            if(unId == VerifyMsgentity.GetMsgID())
-            {
-                VerifyMsgentity.GetEntityData(VERIFY_MESSAGE, ouData);
-                return  S_OK;
-            }
-        }
+		CVerify_MessageEntity *VerifyMsgentity = (CVerify_MessageEntity *) m_ouData->m_odVerifySubEntityList[i];
+		if(unId == VerifyMsgentity->GetMsgID())
+		{
+			VerifyMsgentity->GetEntityData(VERIFY_MESSAGE, ouData);
+			return  S_OK;
+		}
     }
     return S_FALSE;
 }
@@ -333,4 +332,11 @@ HRESULT CVerifyResponse::ValidateEntity(CString& omStrResult)
         return ERR_VALID_ERROR;
     }
     return ERR_VALID_SUCCESS;
+}
+
+HRESULT CVerifyResponse::GetSubEntityData(CVerifySubEntity **odVerifySubEntity,MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity) {
+	CVerify_MessageEntity *verifyMessageEntity = new CVerify_MessageEntity();
+	verifyMessageEntity->GetData(pIXMLDOMVerifyMsgEntity);
+	*odVerifySubEntity = verifyMessageEntity;
+	return S_OK;
 }

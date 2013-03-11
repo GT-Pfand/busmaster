@@ -23,6 +23,7 @@
 #include "TSEditorGUI_PropertyView.h"
 #include "TSEditorGUI_ChildFrame.h"
 #include "TestSetupEditorLib/VerifyEntity.h"
+#include "TestSetupEditorLib/VerifyMessageDlc.h"
 #include "TSEditorGUI_resource.h"
 #include "TSEditorGUI_Definitions.h"
 #include "TSEditorGUI_SettingsDlg.h"
@@ -209,7 +210,7 @@ void CTSEditorChildFrame::vLoadTestSetupFile(CString omFilePath, BOOL bEmptyFile
     m_bFileSaved = FALSE;
     if(bEmptyFile == FALSE)
     {
-        if( m_ouTSEntity.LoadFile(omFilePath) != S_OK)  //if S_OK Then Upadate The Tree
+        if( m_ouTSEntity.LoadFile(omFilePath) != S_OK)  //if S_OK Then Update The Tree
         {
             MessageBox(_("Invalid Test Setup File"), _("Error"), MB_OK|MB_ICONERROR);
             vInitialise();
@@ -329,13 +330,15 @@ void CTSEditorChildFrame::parseTestCaseEntiy(CBaseEntityTA* pTCEntity, HTREEITEM
             HTREEITEM hSubParent = m_odTreeView->InsertTreeItem(hTCTreeitem, _(def_NAME_SEND), NULL, def_INDEX_SEND_IMAGE, def_INDEX_SEND_IMAGE, pEntity->GetID());
             parseSendEntity(pEntity, hSubParent);
         }
-        else if(eEntityType == VERIFY || eEntityType == VERIFYRESPONSE)
+		else if(eEntityType == VERIFY || eEntityType == VERIFYRESPONSE || eEntityType == VERIFY_DLC)
         {
             CString omStrTreeName = _(def_NAME_VERIFY);
             if(eEntityType == VERIFYRESPONSE)
             {
                 omStrTreeName = _(def_NAME_VERIFYRESPONSE);
-            }
+			} else if (eEntityType == VERIFY_DLC) {
+                omStrTreeName = _(def_NAME_VERIFY_DLC);
+			}
             HTREEITEM hSubParent = m_odTreeView->InsertTreeItem(hTCTreeitem, omStrTreeName, NULL, def_INDEX_VERIFY_IMAGE, def_INDEX_VERIFY_IMAGE, pEntity->GetID());
             parseVerifyEntity(pEntity, hSubParent);
         }
@@ -396,16 +399,23 @@ void CTSEditorChildFrame::parseVerifyEntity(CBaseEntityTA* pEntity, HTREEITEM hS
 
     UINT unCount;
     CBaseEntityTA* pSubEntity;
-    CVerify_MessageData odData;
 
     pEntity->GetSubEntryCount(unCount);
     m_odTreeView->vDeleteChildItems(hSubParent);
 
     for(UINT i=0; i<unCount; i++)
     {
-        pEntity->GetSubEntityObj(i, &pSubEntity);
-        pSubEntity->GetEntityData(VERIFY_MESSAGE, &odData);
-        m_odTreeView->InsertTreeItem(hSubParent, odData.m_omMessageName, NULL, def_INDEX_VERIFY_IMAGE, def_INDEX_VERIFY_IMAGE, pSubEntity->GetID());
+		if (pEntity->GetEntityType() == VERIFYRESPONSE || pEntity->GetEntityType() == VERIFY) {
+			CVerify_MessageData odData;
+			pEntity->GetSubEntityObj(i, &pSubEntity);
+			pSubEntity->GetEntityData(VERIFY_MESSAGE, &odData);
+			m_odTreeView->InsertTreeItem(hSubParent, odData.m_omMessageName, NULL, def_INDEX_VERIFY_IMAGE, def_INDEX_VERIFY_IMAGE, pSubEntity->GetID());
+		} else if (pEntity->GetEntityType() == VERIFY_DLC) {
+			CVerifyMessageDlcVerifyData odData;
+			pEntity->GetSubEntityObj(i, &pSubEntity);
+			pSubEntity->GetEntityData(VERIFY_MESSAGE_DLC, &odData);
+			m_odTreeView->InsertTreeItem(hSubParent, odData.m_omMessageName, NULL, def_INDEX_VERIFY_IMAGE, def_INDEX_VERIFY_IMAGE, pSubEntity->GetID());
+		}
     }
     m_odTreeView->RedrawWindow();
 }
@@ -423,8 +433,8 @@ Modifications  :
 void CTSEditorChildFrame::parseWaitEntity(CBaseEntityTA* pEntity, HTREEITEM hTCTreeitem)
 {
     CHECKENTITY(pEntity);
-    CWaitEntityData odData;
-    pEntity->GetEntityData(WAIT, &odData);
+    /*CWaitEntityData *odData;
+    pEntity->GetEntityData(WAIT, &odData);*/
     m_odTreeView->InsertTreeItem(hTCTreeitem, _("Wait"), NULL, def_INDEX_WAIT_IMAGE, def_INDEX_WAIT_IMAGE, pEntity->GetID());
 }
 
@@ -621,10 +631,18 @@ INT CTSEditorChildFrame::nDisplayEntity(CBaseEntityTA* pEntity)
             vDisplaySendInfo(m_pCurrentEntity);
             break;
         case VERIFY:
-            vDisplayVerifyInfo(m_pCurrentEntity);
+			{
+				CVerifyData *ouResponseData;
+				m_pCurrentEntity->GetEntityData(VERIFY, &ouResponseData);
+				vDisplayCommonVerifyInfo(m_pCurrentEntity, 2, ouResponseData);
+			}
+			//vDisplayCommonVerifyInfo(m_pCurrentEntity);
             break;
         case SEND_MESSAGE:
             vDisplaySendMessageInfo(m_pCurrentEntity);
+            break;
+		case VERIFY_MESSAGE_DLC:
+            vDisplayVerifyMessageDlcInfo(m_pCurrentEntity);
             break;
         case VERIFY_MESSAGE:
             vDisplayVerifyMessageInfo(m_pCurrentEntity);
@@ -637,6 +655,9 @@ INT CTSEditorChildFrame::nDisplayEntity(CBaseEntityTA* pEntity)
             break;
         case VERIFYRESPONSE:
             vDisplayVerifyResponseInfo(m_pCurrentEntity);
+            break;
+		case VERIFY_DLC:
+            vDisplayVerifyDlcInfo(m_pCurrentEntity);
             break;
         default:
             return ERR_INVALID_ENTITY;
@@ -894,28 +915,28 @@ void CTSEditorChildFrame::vDisplaySendInfo(CBaseEntityTA* pEntity)
 }
 
 /******************************************************************************
-Function Name  :  vDisplayVerifyInfo
+Function Name  :  vDisplayCommonVerifyInfo
 Input(s)       :
 Output         :
 Functionality  :
 Member of      :  CBusStatisticCAN
 Friend of      :  -
-Author(s)      :  Venkatanarayana Makam
-Date Created   :  04/03/2011
+Author(s)      :  David Pfander
+Date Created   :  02/25/2012
 Modifications  :
 Codetag        :
 ******************************************************************************/
-void CTSEditorChildFrame::vDisplayVerifyInfo(CBaseEntityTA* pEntity, int nVerifyRowIndex)
+void CTSEditorChildFrame::vDisplayCommonVerifyInfo(CBaseEntityTA* pEntity, int nVerifyRowIndex, CVerifyData *pVerifyData)
 {
     CHECKENTITY(pEntity);
 
     CString omstrTemp;
     UINT unCount;
-    m_ouVerifyEntity = *((CVerifyEntity*)pEntity);
+    m_ouVerifyEntity = (CVerifyEntity *)pEntity;
     CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
-    CBaseEntityTA* pSubEntity;  //Verify_message entity
+    CBaseEntityTA* pSubEntity;
 
-    pEntity->GetSubEntryCount(unCount); //Send_Message Count
+    pEntity->GetSubEntryCount(unCount);
     omstrTemp.Format("%d", unCount);
 
     SLISTINFO sListInfo;
@@ -926,10 +947,12 @@ void CTSEditorChildFrame::vDisplayVerifyInfo(CBaseEntityTA* pEntity, int nVerify
     omTempListCtrl.vSetColumnInfo(def_VERIFY_ROWNUM_MSGCNT, def_COLUMN_VALUE, sListInfo);
 
     sListInfo.m_eType = eComboItem;
-    CVerifyResponseData odVerifyData;
-    pEntity->GetEntityData(pEntity->GetEntityType(), &odVerifyData);
-    switch(odVerifyData.m_VerifyData.m_eAttributeError)
-    {
+	/*CVerifyResponseData *odVerifyData = new CVerifyResponseData();
+	odVerifyData->m_VerifyData = new CVerifyResponseData();
+    pEntity->GetEntityData(pEntity->GetEntityType(), odVerifyData);
+    switch(odVerifyData->m_VerifyData->m_eAttributeError)*/
+    switch(pVerifyData->m_eAttributeError)
+	{
         case WARNING:
             omstrTemp = _("WARNING");
             break;
@@ -959,16 +982,25 @@ void CTSEditorChildFrame::vDisplayVerifyInfo(CBaseEntityTA* pEntity, int nVerify
     UINT i;
     for( i=0; i<unCount; i++)
     {
-        CVerify_MessageData odData;
-
         pEntity->GetSubEntityObj(i, &pSubEntity);
-        pSubEntity->GetEntityData(VERIFY_MESSAGE, &odData);
 
-        omstrTemp.Format("%d", odData.m_dwMessageID);
-        omTempListCtrl.InsertItem(i+nVerifyRowIndex, omstrTemp);
-
-        omTempListCtrl.SetItemText(i+nVerifyRowIndex, def_COLUMN_VALUE, odData.m_omMessageName);
-        omTempListCtrl.vSetColumnInfo(i+nVerifyRowIndex, def_COLUMN_VALUE, sListInfo);
+		if (pEntity->GetEntityType() == VERIFYRESPONSE || pEntity->GetEntityType() == VERIFY) {
+			CVerify_MessageData *odData = new CVerify_MessageData();
+			pSubEntity->GetEntityData(VERIFY_MESSAGE, odData);
+			omstrTemp.Format("%d", odData->m_dwMessageID);
+			omTempListCtrl.InsertItem(i+nVerifyRowIndex, omstrTemp);
+			omTempListCtrl.SetItemText(i+nVerifyRowIndex, def_COLUMN_VALUE, odData->m_omMessageName);
+			omTempListCtrl.vSetColumnInfo(i+nVerifyRowIndex, def_COLUMN_VALUE, sListInfo);
+			delete odData;
+		} else if (pEntity->GetEntityType() == VERIFY_DLC) {
+			CVerifyMessageDlcVerifyData *odData = new CVerifyMessageDlcVerifyData();
+			pSubEntity->GetEntityData(VERIFY_MESSAGE_DLC, odData);
+			omstrTemp.Format("%d", odData->m_dwMessageID);
+			omTempListCtrl.InsertItem(i+nVerifyRowIndex, omstrTemp);
+			omTempListCtrl.SetItemText(i+nVerifyRowIndex, def_COLUMN_VALUE, odData->m_omMessageName);
+			omTempListCtrl.vSetColumnInfo(i+nVerifyRowIndex, def_COLUMN_VALUE, sListInfo);
+			delete odData;
+		}
     }
     omTempListCtrl.InsertItem(i+nVerifyRowIndex, "");
     omTempListCtrl.SetItemText(i+nVerifyRowIndex, def_COLUMN_VALUE, _("[Add Message]"));
@@ -997,13 +1029,27 @@ void CTSEditorChildFrame::vDisplayVerifyResponseInfo(CBaseEntityTA* pEntity)
 
     //Wait Period
     CString omStrWait;
-    CVerifyResponseData ouResponseData;
+	CVerifyResponseData *ouResponseData;
+	//ouResponseData->m_VerifyData = new CVerifyResponseData();
     pEntity->GetEntityData(VERIFYRESPONSE, &ouResponseData);
-    omStrWait.Format("%d", ouResponseData.m_ushDuration);
-    vDisplayVerifyInfo(pEntity, 3);
+    omStrWait.Format("%d", ouResponseData->m_ushDuration);
+    vDisplayCommonVerifyInfo(pEntity, 3, ouResponseData);
     omTempListCtrl.SetItemText(def_ROWNNUM_WAITFOR, def_COLUMN_VALUE, omStrWait);
     omTempListCtrl.vSetColumnInfo(def_ROWNNUM_WAITFOR, def_COLUMN_VALUE, sListInfo);
 }
+
+void CTSEditorChildFrame::vDisplayVerifyDlcInfo(CBaseEntityTA* pEntity)
+{
+    CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
+
+    SLISTINFO sListInfo;
+    sListInfo.m_eType = eText;
+	CVerifyDlcData *ouDlcData;
+	//ouDlcData->m_VerifyData = new CVerifyDlcData();
+    pEntity->GetEntityData(VERIFY_DLC, &ouDlcData);
+    vDisplayCommonVerifyInfo(pEntity, 2, ouDlcData);
+}
+
 /******************************************************************************
 Function Name  :  vDisplayWaitInfo
 Input(s)       :
@@ -1223,6 +1269,55 @@ void CTSEditorChildFrame::vDisplayVerifyMessageInfo(CBaseEntityTA* pBaseEntity)
     vDisplaySignalInfo(pSubEntity.m_omMessageName);
 }
 
+void CTSEditorChildFrame::vDisplayVerifyMessageDlcInfo(CBaseEntityTA* pBaseEntity)
+{
+    CHECKENTITY(pBaseEntity);
+
+    CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
+    omTempListCtrl.DeleteAllItems();
+
+    CString omstrTemp;
+    INT nSignalCount;
+    CVerify_MessageData pSubEntity;
+    CVerify_MessageEntity* pEntity = (CVerify_MessageEntity*)pBaseEntity;  //send_message entity
+    pEntity->GetEntityData(VERIFY_MESSAGE, &pSubEntity);
+
+
+    SLISTINFO sListInfo;
+    sNumericInfo sNumInfo;
+
+
+    if(pSubEntity.m_eSignalUnitType == RAW)
+    {
+        omstrTemp = _("RAW");
+    }
+    else if(pSubEntity.m_eSignalUnitType == ENG)
+    {
+        omstrTemp = _("ENG");
+    }
+
+    //Failure ClassiFication Information
+    omTempListCtrl.InsertItem(def_VMSG_ROWNUM_SUINT, _("Signal Unit Type"));
+    omTempListCtrl.SetItemText(def_VMSG_ROWNUM_SUINT, def_COLUMN_VALUE, omstrTemp);
+    sListInfo.m_eType = eComboItem;
+    sListInfo.m_omEntries.Add(_("RAW"));
+    sListInfo.m_omEntries.Add(_("ENG"));
+    omTempListCtrl.vSetColumnInfo(def_VMSG_ROWNUM_SUINT, def_COLUMN_VALUE, sListInfo);
+
+    nSignalCount = (INT)pSubEntity.m_odSignalConditionList.GetCount();
+    sListInfo.m_eType = eText;
+
+    for(INT i = 0; i < nSignalCount; i++)
+    {
+        POSITION  pos = pSubEntity.m_odSignalConditionList.FindIndex(i);
+        CSignalCondition& odSignalData = pSubEntity.m_odSignalConditionList.GetAt(pos);
+        omTempListCtrl.InsertItem(i+1, odSignalData.m_omSigName);
+        omTempListCtrl.SetItemText(i+1, def_COLUMN_VALUE, odSignalData.m_omCondition);
+        omTempListCtrl.vSetColumnInfo(i+1, def_COLUMN_VALUE, sListInfo);
+    }
+    vDisplaySignalInfo(pSubEntity.m_omMessageName);
+}
+
 /******************************************************************************
 Function Name  :  nCancelCurrentChanges
 Input(s)       :
@@ -1282,6 +1377,9 @@ INT CTSEditorChildFrame::nConfirmCurrentChanges()
             break;
         case VERIFYRESPONSE:
             vSaveVerfiyReponseInfo(m_pCurrentEntity);
+            break;
+		case VERIFY_DLC:
+            vSaveVerfiyDlcInfo(m_pCurrentEntity);
             break;
         default:
             return 0;
@@ -1460,7 +1558,7 @@ void CTSEditorChildFrame::vSaveVerifyInfo(CBaseEntityTA* pEntity)
 {
     CHECKENTITY(pEntity);
 
-    CVerifyData odVerifyData;
+    CVerifyData *odVerifyData;
 
     CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
 
@@ -1468,57 +1566,87 @@ void CTSEditorChildFrame::vSaveVerifyInfo(CBaseEntityTA* pEntity)
     CString omstrTemp = omTempListCtrl.GetItemText(def_VERIFY_ROWNUM_FAILURE, 1);
 
 
-    m_ouVerifyEntity.GetEntityData(VERIFY, &odVerifyData);
+    m_ouVerifyEntity->GetEntityData(VERIFY, &odVerifyData);
 
 
     if(omstrTemp == _("WARNING"))
     {
-        odVerifyData.m_eAttributeError = WARNING;
+        odVerifyData->m_eAttributeError = WARNING;
     }
     else if(omstrTemp == _("ERROR"))
     {
-        odVerifyData.m_eAttributeError = ERRORS;
+        odVerifyData->m_eAttributeError = ERRORS;
     }
     else
     {
-        odVerifyData.m_eAttributeError = FATAL;
+        odVerifyData->m_eAttributeError = FATAL;
     }
 
-    pEntity->SetEntityData(VERIFY, &odVerifyData);
+    pEntity->SetEntityData(VERIFY, odVerifyData);
 
     parseVerifyEntity(pEntity, m_hCurrentTreeItem);
 }
 
 void CTSEditorChildFrame::vSaveVerfiyReponseInfo(CBaseEntityTA* pEntity)
 {
-    CVerifyResponseData ouVerifyResponseData;
+	CVerifyResponseData *ouVerifyResponseData;
 
     //Message List
-    m_ouVerifyEntity.GetEntityData(VERIFY, &ouVerifyResponseData.m_VerifyData);
+    m_ouVerifyEntity->GetEntityData(VERIFYRESPONSE, &ouVerifyResponseData);
     CListCtrl& omTempListCtrl = m_odPropertyView->m_omPropertyList;
 
     //Wait Period
     CString omStrWiatFor = omTempListCtrl.GetItemText(def_ROWNNUM_WAITFOR, def_COLUMN_VALUE);
-    ouVerifyResponseData.m_ushDuration = (USHORT)atoi(omStrWiatFor);
+    ouVerifyResponseData->m_ushDuration = (USHORT)atoi(omStrWiatFor);
 
     CString omstrTemp = omTempListCtrl.GetItemText(def_VERIFY_ROWNUM_FAILURE, def_COLUMN_VALUE);
 
 
     if(omstrTemp == _("WARNING"))
     {
-        ouVerifyResponseData.m_VerifyData.m_eAttributeError = WARNING;
+        ouVerifyResponseData->m_eAttributeError = WARNING;
     }
     else if(omstrTemp == _("ERROR"))
     {
-        ouVerifyResponseData.m_VerifyData.m_eAttributeError = ERRORS;
+        ouVerifyResponseData->m_eAttributeError = ERRORS;
     }
     else
     {
-        ouVerifyResponseData.m_VerifyData.m_eAttributeError = FATAL;
+        ouVerifyResponseData->m_eAttributeError = FATAL;
     }
 
     //Saving
-    pEntity->SetEntityData(VERIFYRESPONSE, &ouVerifyResponseData);
+    pEntity->SetEntityData(VERIFYRESPONSE, ouVerifyResponseData);
+    parseVerifyEntity(pEntity, m_hCurrentTreeItem);
+}
+
+void CTSEditorChildFrame::vSaveVerfiyDlcInfo(CBaseEntityTA* pEntity)
+{
+	CVerifyDlcData *ouVerifyDlcData;
+	//ouVerifyDlcData->m_VerifyData = new CVerifyDlcData();
+	
+    //Message List
+    m_ouVerifyEntity->GetEntityData(VERIFY_DLC, &ouVerifyDlcData);
+    CListCtrl& omTempListCtrl = m_odPropertyView->m_omPropertyList;
+
+    CString omstrTemp = omTempListCtrl.GetItemText(def_VERIFY_ROWNUM_FAILURE, def_COLUMN_VALUE);
+
+
+    if(omstrTemp == _("WARNING"))
+    {
+        ouVerifyDlcData->m_eAttributeError = WARNING;
+    }
+    else if(omstrTemp == _("ERROR"))
+    {
+        ouVerifyDlcData->m_eAttributeError = ERRORS;
+    }
+    else
+    {
+        ouVerifyDlcData->m_eAttributeError = FATAL;
+    }
+
+    //Saving
+    pEntity->SetEntityData(VERIFY_DLC, ouVerifyDlcData);
     parseVerifyEntity(pEntity, m_hCurrentTreeItem);
 }
 /******************************************************************************
@@ -1650,14 +1778,14 @@ void CTSEditorChildFrame::vSaveWaitInfo(CBaseEntityTA* pEntity)
 {
     CHECKENTITY(pEntity);
     CString omstrTemp;
-    CWaitEntityData odData;
+    CWaitEntityData *odData;
     CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
 
     pEntity->GetEntityData(WAIT, &odData);
-    odData.m_omPurpose = omTempListCtrl.GetItemText(def_WAIT_ROWNUM_PURPOSE, 1);
+    odData->m_omPurpose = omTempListCtrl.GetItemText(def_WAIT_ROWNUM_PURPOSE, 1);
     omstrTemp = omTempListCtrl.GetItemText(def_WAIT_ROWNUM_DELAY, 1);
-    odData.m_ushDuration = (USHORT)atoi(omstrTemp);
-    pEntity->SetEntityData(WAIT, &odData);
+    odData->m_ushDuration = (USHORT)atoi(omstrTemp);
+    pEntity->SetEntityData(WAIT, odData);
 }
 
 /******************************************************************************
@@ -1743,6 +1871,10 @@ void CTSEditorChildFrame::vListCtrlItemChanged(LPNMLISTVIEW pNMLV)
     {
         vHandleVerifyResponseEntity(pNMLV);
     }
+	else if (m_pCurrentEntity->GetEntityType() == VERIFY_DLC)
+	{
+        vHandleVerifyDlcEntity(pNMLV);		
+	}
 }
 
 /******************************************************************************
@@ -1767,7 +1899,13 @@ void CTSEditorChildFrame::vHandleTestSetup(LPNMLISTVIEW pNMLV)
         if(ouHeaderInfo.m_omDatabasePath == "")
         {
             ouHeaderInfo.m_omDatabasePath = omstrDatabaseName;
-            m_ouTSEntity.m_ouDataBaseManager.bFillDataStructureFromDatabaseFile(omstrDatabaseName);
+            if (m_ouTSEntity.m_ouDataBaseManager.bFillDataStructureFromDatabaseFile(omstrDatabaseName) == FALSE)
+			{
+				// Remove the entry from the list box
+				ouHeaderInfo.m_omDatabasePath = "";
+				m_ouTSEntity.SetHeaderData(ouHeaderInfo);
+				vDisplayHeaderInfo(0);
+			}
         }
         else
         {
@@ -1783,7 +1921,13 @@ void CTSEditorChildFrame::vHandleTestSetup(LPNMLISTVIEW pNMLV)
                 if(nRetVal == IDOK)
                 {
                     ouHeaderInfo.m_omDatabasePath = omstrDatabaseName;
-                    m_ouTSEntity.m_ouDataBaseManager.bFillDataStructureFromDatabaseFile(omstrDatabaseName);
+                    if (m_ouTSEntity.m_ouDataBaseManager.bFillDataStructureFromDatabaseFile(omstrDatabaseName) == FALSE)
+					{
+						// Remove the entry from the list box
+						ouHeaderInfo.m_omDatabasePath = "";
+						m_ouTSEntity.SetHeaderData(ouHeaderInfo);
+						vDisplayHeaderInfo(0);
+					}
                     m_ouTSEntity.vDeleteAllSubMessages();
                     OnDisplayReset();
                 }
@@ -1909,7 +2053,7 @@ void CTSEditorChildFrame::vHandleVerifyEntity(LPNMLISTVIEW pNMLV)
             if(item != omTempListCtrl.GetItemCount()-1) // Lase Item Check.Still This
             {
                 // Message is not added in List;
-                m_ouVerifyEntity.DeleteSubEntry(item - def_VERIFY_ROWNUM_MSGLIST);      //Message Index
+                m_ouVerifyEntity->DeleteSubEntry(item - def_VERIFY_ROWNUM_MSGLIST);      //Message Index
                 omTempListCtrl.DeleteItem(item);
             }
             else
@@ -1925,12 +2069,12 @@ void CTSEditorChildFrame::vHandleVerifyEntity(LPNMLISTVIEW pNMLV)
             CVerify_MessageData odVerifyMsgData;
             if(item == omTempListCtrl.GetItemCount()-1) //Last Row
             {
-                CVerify_MessageEntity odNewVerifyEnity;
+                CVerify_MessageEntity *odNewVerifyEnity = new CVerify_MessageEntity();
                 odVerifyMsgData.m_omMessageName = omstrTemp;
 
                 odVerifyMsgData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
-                odNewVerifyEnity.SetEntityData(VERIFY_MESSAGE, &odVerifyMsgData);
-                m_ouVerifyEntity.AddSubEntry((CBaseEntityTA*)&odNewVerifyEnity);
+                odNewVerifyEnity->SetEntityData(VERIFY_MESSAGE, &odVerifyMsgData);
+                m_ouVerifyEntity->AddSubEntry((CBaseEntityTA*) odNewVerifyEnity);
 
                 omTempListCtrl.InsertItem(item+1, "");
                 omTempListCtrl.SetItemText(item+1, def_COLUMN_VALUE, _("[Add Message]"));
@@ -1941,7 +2085,7 @@ void CTSEditorChildFrame::vHandleVerifyEntity(LPNMLISTVIEW pNMLV)
                 CBaseEntityTA* pEntity;
 
                 CVerify_MessageData odOrgMsgData;
-                m_ouVerifyEntity.GetSubEntityObj(item-def_VERIFY_ROWNUM_MSGLIST, &pEntity);
+                m_ouVerifyEntity->GetSubEntityObj(item-def_VERIFY_ROWNUM_MSGLIST, &pEntity);
                 pEntity->GetEntityData(VERIFY_MESSAGE, &odOrgMsgData);
                 odVerifyMsgData.m_omMessageName = omstrTemp;
                 odVerifyMsgData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
@@ -1957,7 +2101,7 @@ void CTSEditorChildFrame::vHandleVerifyEntity(LPNMLISTVIEW pNMLV)
             omTempListCtrl.vSetColumnInfo(item, def_COLUMN_VALUE, sListInfo);
         }
         UINT unCount;
-        m_ouVerifyEntity.GetSubEntryCount(unCount);//omTempListCtrl.GetItemCount();
+        m_ouVerifyEntity->GetSubEntryCount(unCount);//omTempListCtrl.GetItemCount();
         omstrTemp.Format("%d", unCount);
         omTempListCtrl.SetItemText(0, def_COLUMN_VALUE, omstrTemp);
     }
@@ -1991,7 +2135,7 @@ void CTSEditorChildFrame::vHandleVerifyResponseEntity(LPNMLISTVIEW pNMLV)
             if(item != omTempListCtrl.GetItemCount()-1) // Lase Item Check.Still This
             {
                 // Message is not added in List;
-                m_ouVerifyEntity.DeleteSubEntry(item - def_VERIFYRES_ROWNUM_MSGLIST);      //Message Index
+                m_ouVerifyEntity->DeleteSubEntry(item - def_VERIFYRES_ROWNUM_MSGLIST);      //Message Index
                 omTempListCtrl.DeleteItem(item);
             }
             else
@@ -2007,12 +2151,12 @@ void CTSEditorChildFrame::vHandleVerifyResponseEntity(LPNMLISTVIEW pNMLV)
             CVerify_MessageData odVerifyMsgData;
             if(item == omTempListCtrl.GetItemCount()-1) //Last Row
             {
-                CVerify_MessageEntity odNewVerifyEnity;
+				CVerify_MessageEntity *odNewVerifyEntity = new CVerify_MessageEntity();
                 odVerifyMsgData.m_omMessageName = omstrTemp;
 
                 odVerifyMsgData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
-                odNewVerifyEnity.SetEntityData(VERIFY_MESSAGE, &odVerifyMsgData);
-                m_ouVerifyEntity.AddSubEntry((CBaseEntityTA*)&odNewVerifyEnity);
+                odNewVerifyEntity->SetEntityData(VERIFY_MESSAGE, &odVerifyMsgData);
+                m_ouVerifyEntity->AddSubEntry((CBaseEntityTA*) odNewVerifyEntity);
 
                 omTempListCtrl.InsertItem(item+1, "");
                 omTempListCtrl.SetItemText(item+1, def_COLUMN_VALUE, _("[Add Message]"));
@@ -2023,7 +2167,7 @@ void CTSEditorChildFrame::vHandleVerifyResponseEntity(LPNMLISTVIEW pNMLV)
                 CBaseEntityTA* pEntity;
 
                 CVerify_MessageData odOrgMsgData;
-                m_ouVerifyEntity.GetSubEntityObj(item-def_VERIFYRES_ROWNUM_MSGLIST, &pEntity);
+                m_ouVerifyEntity->GetSubEntityObj(item-def_VERIFYRES_ROWNUM_MSGLIST, &pEntity);
                 pEntity->GetEntityData(VERIFY_MESSAGE, &odOrgMsgData);
                 odVerifyMsgData.m_omMessageName = omstrTemp;
                 odVerifyMsgData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
@@ -2039,12 +2183,82 @@ void CTSEditorChildFrame::vHandleVerifyResponseEntity(LPNMLISTVIEW pNMLV)
             omTempListCtrl.vSetColumnInfo(item, def_COLUMN_VALUE, sListInfo);
         }
         UINT unCount;
-        m_ouVerifyEntity.GetSubEntryCount(unCount);//omTempListCtrl.GetItemCount();
+        m_ouVerifyEntity->GetSubEntryCount(unCount);//omTempListCtrl.GetItemCount();
         omstrTemp.Format("%d", unCount);
         omTempListCtrl.SetItemText(0, def_COLUMN_VALUE, omstrTemp);
     }
     omTempListCtrl.EnsureVisible(item+1, FALSE);
 }
+
+void CTSEditorChildFrame::vHandleVerifyDlcEntity(LPNMLISTVIEW pNMLV)
+{
+    SLISTINFO sListInfo;
+    CListCtrlEx& omTempListCtrl = m_odPropertyView->m_omPropertyList;
+    CString omstrTemp;
+    int item = pNMLV->iItem;
+    if(item >= def_VERIFY_ROWNUM_MSGLIST)      //item is with in message list
+    {
+        omstrTemp  = omTempListCtrl.GetItemText(item, def_COLUMN_VALUE);
+        if(omstrTemp == _(defDELETE_MSG_SYMBOL))
+        {
+            if(item != omTempListCtrl.GetItemCount()-1) // Lase Item Check.Still This
+            {
+                // Message is not added in List;
+                m_ouVerifyEntity->DeleteSubEntry(item - def_VERIFY_ROWNUM_MSGLIST);      //Message Index
+                omTempListCtrl.DeleteItem(item);
+            }
+            else
+            {
+                omTempListCtrl.SetItemText(item, def_COLUMN_VALUE, _("[Add Message]"));
+            }
+        }
+        else
+        {
+            //CVERIFY_MESSAGEData odVerifyMsgData;
+            sListInfo.m_eType = eComboItem;
+            m_ouTSEntity.m_ouDataBaseManager.nFillMessageList(sListInfo.m_omEntries, TRUE);
+			CVerifyMessageDlcVerifyData odVerifyDlcData;
+            if (item == omTempListCtrl.GetItemCount() - 1) //Last Row
+            {
+				CVerifyMessageDlcEntity *odNewVerifyEntity = new CVerifyMessageDlcEntity();
+                odVerifyDlcData.m_omMessageName = omstrTemp;
+
+                odVerifyDlcData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
+                odNewVerifyEntity->SetEntityData(VERIFY_MESSAGE_DLC, &odVerifyDlcData);
+                m_ouVerifyEntity->AddSubEntry((CBaseEntityTA*) odNewVerifyEntity);
+
+                omTempListCtrl.InsertItem(item + 1, "");
+                omTempListCtrl.SetItemText(item + 1, def_COLUMN_VALUE, _("[Add Message]"));
+                omTempListCtrl.vSetColumnInfo(item + 1, def_COLUMN_VALUE, sListInfo);
+            }
+            else
+            {
+                CBaseEntityTA* pEntity;
+
+                CVerify_MessageData odOrgMsgData;
+                m_ouVerifyEntity->GetSubEntityObj(item-def_VERIFY_ROWNUM_MSGLIST, &pEntity);
+                pEntity->GetEntityData(VERIFY_MESSAGE, &odOrgMsgData);
+                odVerifyDlcData.m_omMessageName = omstrTemp;
+                odVerifyDlcData.m_dwMessageID = m_ouTSEntity.m_ouDataBaseManager.unGetMessageID(omstrTemp);
+                if(odOrgMsgData.m_omMessageName != omstrTemp)
+                {
+                    pEntity->SetEntityData(VERIFY_MESSAGE, &odVerifyDlcData);
+                }
+            }
+            omstrTemp.Format("%d", odVerifyDlcData.m_dwMessageID);
+            omTempListCtrl.DeleteItem(item);
+            omTempListCtrl.InsertItem(item, omstrTemp);
+            omTempListCtrl.SetItemText(item, def_COLUMN_VALUE, odVerifyDlcData.m_omMessageName);
+            omTempListCtrl.vSetColumnInfo(item, def_COLUMN_VALUE, sListInfo);
+        }
+        UINT unCount;
+        m_ouVerifyEntity->GetSubEntryCount(unCount);//omTempListCtrl.GetItemCount();
+        omstrTemp.Format("%d", unCount);
+        omTempListCtrl.SetItemText(0, def_COLUMN_VALUE, omstrTemp);
+    }
+    omTempListCtrl.EnsureVisible(item+1, FALSE);
+}
+
 /******************************************************************************
 Function Name  :  unRepisitonEntry
 Input(s)       :
@@ -2155,6 +2369,15 @@ INT CTSEditorChildFrame::nAddNewEntity(DWORD dwId, eTYPE_ENTITY eEntityType)
             pNewEntity = new CVerifyResponse();
             ((CVerifyResponse*)pNewEntity)->m_ushDuration = 0;
             omStrNewItem = _("VerfiyResponse");
+            unImageIndex = def_INDEX_VERIFY_IMAGE;
+            vSetModifiedFlag(TRUE);
+            break;
+        }
+		case VERIFY_DLC:
+        {
+			pNewEntity = new VerifyMessageDlc();
+            ((VerifyMessageDlc*)pNewEntity)->m_ushDuration = 0;
+            omStrNewItem = _("verifyDlc");
             unImageIndex = def_INDEX_VERIFY_IMAGE;
             vSetModifiedFlag(TRUE);
             break;
@@ -2525,10 +2748,11 @@ void CTSEditorChildFrame::vCopyTreeItem(CBaseEntityTA** podCopyEntity, CBaseEnti
                 *podCopyEntity = new CSendEntity();
                 *((CSendEntity*)*podCopyEntity) = *((CSendEntity*)pCurrentEntity);
                 break;
-            case VERIFY:
+            /*case VERIFY:
                 *podCopyEntity = new CVerifyEntity();
                 *((CVerifyEntity*)*podCopyEntity) = *((CVerifyEntity*)pCurrentEntity);
                 break;
+				*/
             case SEND_MESSAGE:
                 *podCopyEntity = new CSend_MessageEntity();
                 *((CSend_MessageEntity*)*podCopyEntity) = *((CSend_MessageEntity*)pCurrentEntity);

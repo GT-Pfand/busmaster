@@ -1125,6 +1125,7 @@ HRESULT CTSExecutorLIB::Execute( /*PFCALLBACKRESULTTC pfResultTC*/)
         CTestSetupEntity& ouTestSetupEntity = m_ouTestSetupEntityList.GetAt(pos);
         if(ouTestSetupEntity.bGetEnableStatus() == TRUE)
         {
+			// pfand: actually executes the test
             bExecuteTestSetup(ouTestSetupEntity);
         }
     }
@@ -1150,8 +1151,12 @@ BOOL CTSExecutorLIB::bExecuteTestSetup(CTestSetupEntity& ouTestSetupEntity)
     //Initialise Result Information
     ouTestSetupEntity.GetSubEntryCount(unTCCount);
     ouTestSetupEntity.GetHeaderData(m_ouResult.m_ouHeaderInfo);
+
     ouTestSetupEntity.m_ouDataBaseManager.bFillDataStructureFromDatabaseFile(m_ouResult.m_ouHeaderInfo.m_omDatabasePath);
-    m_ouResult.m_omStrTestSetupFile = ouTestSetupEntity.m_omstrTestSetupTitle;
+
+	//pfand: Insert hardcoded testcase here
+    
+	m_ouResult.m_omStrTestSetupFile = ouTestSetupEntity.m_omstrTestSetupTitle;
     m_ouResult.m_odTcResultList.RemoveAll();
     for(UINT nTCIndex=0; nTCIndex<unTCCount; ++nTCIndex)
     {
@@ -1251,7 +1256,7 @@ BOOL CTSExecutorLIB::bExecuteTestCase(CBaseEntityTA* pTCEntity, CResultTc& ouTes
             break;
             case VERIFYRESPONSE:
             {
-                m_ompResultDisplayWnd->SetItemText(nCurrentRow, 1, _("VerifyRequest Started"));
+                m_ompResultDisplayWnd->SetItemText(nCurrentRow, 1, _("Verify signal started"));
                 CResultVerify ouVerifyResult;
                 if(g_podTSExecutor->TSX_VerifyResponse(pEntity, ouVerifyResult) == S_FALSE)
                 {
@@ -1260,6 +1265,16 @@ BOOL CTSExecutorLIB::bExecuteTestCase(CBaseEntityTA* pTCEntity, CResultTc& ouTes
                 ouTestCaseResult.m_ouVerifyList.AddTail(ouVerifyResult);
             }
             break;
+			case VERIFY_DLC:
+			{
+                m_ompResultDisplayWnd->SetItemText(nCurrentRow, 1, _("Verify dlc test started"));
+                CResultVerify ouVerifyResult;
+                if(g_podTSExecutor->TSX_VerifyMessageDlc(pEntity, ouVerifyResult) == S_FALSE)
+                {
+                    bResult = FALSE;
+                }
+                ouTestCaseResult.m_ouVerifyList.AddTail(ouVerifyResult);
+			}
             default:
                 break;
         }

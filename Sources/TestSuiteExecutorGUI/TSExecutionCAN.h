@@ -88,6 +88,8 @@ public:
     BOOL bVerifyCanMessage(CVerify_MessageData& ouVerifyData, CSignalInfoArray& ouSignalInfo, CMessageResult& ouMsgResult);
     virtual ~CTSExecutionCAN(void);
 
+	HRESULT TSX_VerifyMessageDlc(CBaseEntityTA* pEntity, CResultVerify& ouVerifyResult);
+
 private:
     //Initialise or resets the bus statistics.
     void vInitialiseTSXData(void);

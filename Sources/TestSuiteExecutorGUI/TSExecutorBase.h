@@ -37,6 +37,7 @@ public:
     virtual HRESULT TSX_SendMessage(CBaseEntityTA* pEntity) = 0;
     virtual HRESULT TSX_VerifyMessage(CBaseEntityTA* pEntity, CResultVerify& ouVerifyResult) = 0;
     virtual HRESULT TSX_VerifyResponse(CBaseEntityTA* pEntity, CResultVerify& ouVerifyResult) = 0;
+	virtual HRESULT TSX_VerifyMessageDlc(CBaseEntityTA* pEntity, CResultVerify& ouVerifyResult) = 0;
     virtual ~CTSExecutorBase(void);
     HRESULT TSX_SetDisplayWnd(CListCtrl* pomResultDispaly);
 protected:

@@ -28,6 +28,7 @@
 #include "VerifyEntity.h"
 #include "TestCaseEntity.h"
 #include "VerifyResponse.h"
+#include "VerifyMessageDlc.h"
 
 typedef CList<CTestCaseEntity,CTestCaseEntity&> CTestCaseEntityList;
 class CTestSetupEntity : public CBaseEntityTA

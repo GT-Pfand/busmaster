@@ -65,6 +65,7 @@
 #define def_STR_SEND_NODE       "send"
 #define def_STR_VERIFY_NODE     "verify"
 #define def_STR_VERIFYRES_NODE  "verifyResponse"
+#define def_STR_VERIFY_MESSAGE_DLC_NODE  "verify_dlc"
 #define def_STR_ATTRIB_FAIL     "failure"
 #define def_STR_ATTRIB_WAITFOR  "waitfor"
 #define def_STR_TCATTRIB_ID     "identifier"
@@ -105,7 +106,9 @@ enum eTYPE_ENTITY
     SEND_MESSAGE,
     VERIFY,
     VERIFY_MESSAGE,
-    VERIFYRESPONSE
+    VERIFY_MESSAGE_DLC,
+    VERIFYRESPONSE,
+	VERIFY_DLC
 };
 
 enum eTYPE_UNIT_SIGNAL

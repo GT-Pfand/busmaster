@@ -25,6 +25,7 @@
 
 #include "TestSetupEditorLib_stdafx.h"
 #include "VerifyEntity.h"
+#include "Verify_MessageEntity.h"
 
 /******************************************************************************
 Function Name  :  CVerifyEntity
@@ -40,6 +41,7 @@ Modifications  :
 CVerifyEntity::CVerifyEntity(void)
 {
     m_eType = VERIFY;
+	this->m_ouData = new CVerifyData();
 }
 
 
@@ -56,7 +58,8 @@ Modifications  :
 ******************************************************************************/
 CVerifyEntity::~CVerifyEntity(void)
 {
-    m_ouData.m_odVerify_MessageEntityList.RemoveAll();
+    // m_ouData->m_odVerifySubEntityList.RemoveAll();
+	m_ouData->m_odVerifySubEntityList.clear();
 }
 
 /******************************************************************************
@@ -107,9 +110,8 @@ Modifications  :
 ******************************************************************************/
 HRESULT CVerifyEntity::AddSubEntry(CBaseEntityTA* pouSubEntryObj)
 {
-
-    CVerify_MessageEntity& odVerify_MessageEntity = *((CVerify_MessageEntity*)(pouSubEntryObj));
-    m_ouData.m_odVerify_MessageEntityList.AddTail(odVerify_MessageEntity);
+    //m_ouData->m_odVerifySubEntityList.AddTail((CVerifySubEntity*)(pouSubEntryObj));
+	m_ouData->m_odVerifySubEntityList.push_back((CVerifySubEntity*)(pouSubEntryObj));
     return  S_OK;
 }
 
@@ -130,17 +132,28 @@ HRESULT CVerifyEntity::DeleteSubEntry(CBaseEntityTA* pouSubEntryObj)
 {
     if(pouSubEntryObj!= NULL)
     {
-        INT nCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+        int nCount = (int) m_ouData->m_odVerifySubEntityList.size();
+        for (int i = 0; i < nCount; i++)
+        {
+			CVerifySubEntity* pEntity = m_ouData->m_odVerifySubEntityList[i];
+			if (pEntity->GetID() == pouSubEntryObj->GetID()) {
+				m_ouData->m_odVerifySubEntityList.erase(m_ouData->m_odVerifySubEntityList.begin() + i);
+				return S_OK;
+			}
+		}
+
+        /*INT nCount = (INT)m_ouData->m_odVerifySubEntityList.size();
         for(int i = 0; i < nCount; i++)
         {
-            POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-            CVerify_MessageEntity& pEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
+            POSITION pos = m_ouData->m_odVerifySubEntityList.FindIndex(i);
+            CVerifySubEntity& pEntity = m_ouData->m_odVerifySubEntityList.GetAt(pos);
+
             if(pEntity.GetID() == pouSubEntryObj->GetID())
             {
-                m_ouData.m_odVerify_MessageEntityList.RemoveAt(pos);
+                m_ouData->m_odVerifySubEntityList.RemoveAt(pos);
                 return S_OK;
             }
-        }
+        }*/
     }
     return S_FALSE;
 }
@@ -156,13 +169,12 @@ Author(s)      :  Venkatanarayana Makam
 Date Created   :  06/04/2011
 Modifications  :
 ******************************************************************************/
-HRESULT CVerifyEntity::DeleteSubEntry(INT index)
+HRESULT CVerifyEntity::DeleteSubEntry(unsigned int index)
 {
-    POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(index);
-    if( NULL != pos )
-    {
-        m_ouData.m_odVerify_MessageEntityList.RemoveAt(pos);
-    }
+	if (index >= m_ouData->m_odVerifySubEntityList.size()) {
+		return S_OK;	
+	}
+    m_ouData->m_odVerifySubEntityList.erase(m_ouData->m_odVerifySubEntityList.begin() + index);
     return S_OK;
 }
 
@@ -179,11 +191,9 @@ Modifications  :
 ******************************************************************************/
 const HRESULT CVerifyEntity::GetSubEntityObj(UINT unIndex, CBaseEntityTA**  pouSubEntity)
 {
-    POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(unIndex);
-    if(pos != NULL)
+    if (unIndex < m_ouData->m_odVerifySubEntityList.size())
     {
-        CVerify_MessageEntity& VerifyMsgentity = (m_ouData.m_odVerify_MessageEntityList.GetAt(pos));
-        *pouSubEntity = &VerifyMsgentity;
+        *pouSubEntity = (m_ouData->m_odVerifySubEntityList[unIndex]);
         return  S_OK;
     }
     return ERR_WRONG_INDEX;
@@ -202,7 +212,7 @@ Modifications  :
 ******************************************************************************/
 HRESULT CVerifyEntity::GetSubEntryCount(UINT& unTotal)
 {
-    unTotal = (UINT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    unTotal = (UINT)m_ouData->m_odVerifySubEntityList.size();
     return  S_OK;
 }
 
@@ -221,43 +231,43 @@ Codetag        :  CS020
 ******************************************************************************/
 HRESULT CVerifyEntity::RepositionSubEntity(CBaseEntityTA* pouRefSubEntity, CBaseEntityTA* pouCurrSubEntity)
 {
-    UINT unCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
-    CVerify_MessageEntity ouSendEntity = *((CVerify_MessageEntity*)pouRefSubEntity);
-    for(UINT i=0; i<unCount; i++)
+    UINT unCount = (INT)m_ouData->m_odVerifySubEntityList.size();
+    CVerifySubEntity *ouSendEntity = (CVerifySubEntity*)pouRefSubEntity;
+    for(unsigned int i = 0; i < unCount; i++)
     {
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouSendMsgEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        if(ouSendMsgEntity.GetID() == pouRefSubEntity->GetID())
+        CVerifySubEntity *ouSendMsgEntity = m_ouData->m_odVerifySubEntityList[i];
+        if(ouSendMsgEntity->GetID() == pouRefSubEntity->GetID())
         {
-            m_ouData.m_odVerify_MessageEntityList.RemoveAt(pos);
+            m_ouData->m_odVerifySubEntityList.erase(m_ouData->m_odVerifySubEntityList.begin() + i);
             break;
         }
     }
-    POSITION posNew = NULL;
     if(pouCurrSubEntity == NULL)        //Insert At First Index;
     {
-        posNew =  m_ouData.m_odVerify_MessageEntityList.AddHead(ouSendEntity);
-    }
-
-    else
-    {
-        for(UINT i=0; i<unCount; i++)
+		m_ouData->m_odVerifySubEntityList.insert(m_ouData->m_odVerifySubEntityList.begin() ,ouSendEntity);
+    } 
+	else 
+	{
+		unCount = (INT)m_ouData->m_odVerifySubEntityList.size();
+        for(unsigned int i = 0; i < unCount; i++)
         {
-            POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-            CVerify_MessageEntity& ouSendMsgEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-            if(ouSendMsgEntity.GetID() == pouCurrSubEntity->GetID())
+            CVerifySubEntity *ouSendMsgEntity = m_ouData->m_odVerifySubEntityList[i];
+            if(ouSendMsgEntity->GetID() == pouCurrSubEntity->GetID())
             {
-                posNew =  m_ouData.m_odVerify_MessageEntityList.InsertAfter(pos, ouSendEntity);
+				// + 1 to insert after the element
+                m_ouData->m_odVerifySubEntityList.insert(m_ouData->m_odVerifySubEntityList.begin() + i + 1, ouSendEntity);
                 break;
             }
         }
     }
-    if(posNew != NULL)
-    {
-        CVerify_MessageEntity& odSendMsgData = m_ouData.m_odVerify_MessageEntityList.GetAt(posNew);
-        return odSendMsgData.GetID();
-    }
-    return S_FALSE;
+
+	return S_OK;
+}
+
+HRESULT CVerifyEntity::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
+{
+	CVerifyData *verifyData = new CVerifyData();
+    return this->GetCommonVerifyData(pIDomNode, verifyData);
 }
 
 /******************************************************************************
@@ -271,8 +281,9 @@ Author(s)      :  Venkatanarayana Makam
 Date Created   :  06/04/2011
 Modifications  :
 ******************************************************************************/
-HRESULT CVerifyEntity::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
+HRESULT CVerifyEntity::GetCommonVerifyData(MSXML2::IXMLDOMNodePtr& pIDomNode, CVerifyData *verifyData)
 {
+	m_ouData = verifyData;
     _bstr_t bstrNodeName = def_STR_VERIFYMSG_NODE;
     CComVariant NodeValue;
     MSXML2::IXMLDOMNamedNodeMapPtr pDOMVerifyAtrributes;
@@ -286,21 +297,22 @@ HRESULT CVerifyEntity::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
     CString strTemp;
     strTemp = strCopyBSTRToCString(NodeValue);
 
+	//m_ouData = new CVerifyData();
     if(strTemp == "SUCCESS")
     {
-        m_ouData.m_eAttributeError = SUCCESS;
+        m_ouData->m_eAttributeError = SUCCESS;
     }
     else if(strTemp == "WARNING")
     {
-        m_ouData.m_eAttributeError = WARNING;
+        m_ouData->m_eAttributeError = WARNING;
     }
     else if(strTemp == "ERRORS")
     {
-        m_ouData.m_eAttributeError = ERRORS;
+        m_ouData->m_eAttributeError = ERRORS;
     }
     else
     {
-        m_ouData.m_eAttributeError = FATAL;
+        m_ouData->m_eAttributeError = FATAL;
     }
     MSXML2::IXMLDOMNodeListPtr pIDOMSendList;
 
@@ -312,16 +324,19 @@ HRESULT CVerifyEntity::GetData(MSXML2::IXMLDOMNodePtr& pIDomNode)
 
     for(int i = 0; i < lCount; i++)
     {
-        CVerify_MessageEntity odVerify_MessageEntity;
+        CVerifySubEntity *odVerifySubEntity;
         MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity;
         pIXMLDOMVerifyMsgEntity = pIDOMSendList->Getitem(i);
-        if(odVerify_MessageEntity.GetData(pIXMLDOMVerifyMsgEntity) == S_OK)
+		//if(CVerifySubEntity::GetData(&odVerifySubEntity, pIXMLDOMVerifyMsgEntity) == S_OK)
+		if(this->GetSubEntityData(&odVerifySubEntity, pIXMLDOMVerifyMsgEntity) == S_OK)
         {
-            m_ouData.m_odVerify_MessageEntityList.AddTail(odVerify_MessageEntity);
+            m_ouData->m_odVerifySubEntityList.push_back(odVerifySubEntity);
         }
     }
     return S_OK;
 }
+
+
 /******************************************************************************
 Function Name  :  GetEntityData
 Input(s)       :
@@ -337,7 +352,8 @@ HRESULT CVerifyEntity::GetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntit
 {
     if(eCurrEntityType == VERIFY && pvEntityData != NULL)
     {
-        *((CVerifyData*)pvEntityData) = m_ouData;
+        //pvEntityData = (void *) m_ouData;
+		*((CVerifyData **)pvEntityData) = (CVerifyData *) m_ouData;
     }
     return  S_OK;
 }
@@ -375,12 +391,12 @@ HRESULT CVerifyEntity::SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode)
     pIDOMDoc.CreateInstance(L"Msxml2.DOMDocument");
 
 
-    INT lCount = (INT)m_ouData.m_odVerify_MessageEntityList.GetCount();
+    int lCount = m_ouData->m_odVerifySubEntityList.size();
     MSXML2::IXMLDOMElementPtr pIDomSendNode =  pIDOMDoc->createElement(_bstr_t(def_STR_VERIFY_NODE));
     MSXML2::IXMLDOMAttributePtr pIDomTSAtrrib = pIDOMDoc->createAttribute(def_STR_ATTRIB_FAIL);
     if(pIDomTSAtrrib!= NULL)
     {
-        switch(m_ouData.m_eAttributeError)
+        switch(m_ouData->m_eAttributeError)
         {
             case SUCCESS:
                 omstrTemp = "SUCCESS";
@@ -402,9 +418,8 @@ HRESULT CVerifyEntity::SetData(MSXML2::IXMLDOMElementPtr& pIDomTestCaseNode)
 
     for(INT i=0; i<lCount; i++)
     {
-        POSITION pos = m_ouData.m_odVerify_MessageEntityList.FindIndex(i);
-        CVerify_MessageEntity& ouVerifyMsgEntity = m_ouData.m_odVerify_MessageEntityList.GetAt(pos);
-        ouVerifyMsgEntity.SetData(pIDomSendNode);
+		CVerifySubEntity *pVerifySubEntity = m_ouData->m_odVerifySubEntityList[i];
+        pVerifySubEntity->SetData(pIDomSendNode);
     }
     pIDomTestCaseNode->appendChild(pIDomSendNode);
     return S_OK;
@@ -426,7 +441,7 @@ HRESULT CVerifyEntity::SetEntityData(eTYPE_ENTITY eCurrEntityType, void* pvEntit
 {
     if(eCurrEntityType == VERIFY && pvEntityData != NULL)
     {
-        m_ouData = *((CVerifyData*)pvEntityData);
+        m_ouData = (CVerifyData*)pvEntityData;
     }
     return  S_OK;
 }
@@ -454,3 +469,34 @@ HRESULT CVerifyEntity::ValidateEntity(CString& omStrResult)
     }
     return ERR_VALID_SUCCESS;
 }
+
+HRESULT CVerifyEntity::GetSubEntityData(CVerifySubEntity **odVerifySubEntity,MSXML2::IXMLDOMNodePtr pIXMLDOMVerifyMsgEntity) {
+	CVerify_MessageEntity *verifyMessageEntity = new CVerify_MessageEntity();
+	verifyMessageEntity->GetData(pIXMLDOMVerifyMsgEntity);
+	*odVerifySubEntity = verifyMessageEntity;
+	return S_OK;
+}
+
+CVerifyData::CVerifyData(void)
+{
+    m_odVerifySubEntityList.clear();
+    m_eAttributeError = ERRORS;
+}
+
+CVerifyData::~CVerifyData(void)
+{
+}
+
+CVerifyData& CVerifyData::operator=(const CVerifyData& RefObj)
+{
+    m_odVerifySubEntityList.clear();
+    m_eAttributeError = RefObj.m_eAttributeError;
+    INT Count = (INT)RefObj.m_odVerifySubEntityList.size();
+    for(int i=0; i<Count; i++)
+    {
+        CVerifySubEntity *subEntity = (CVerifySubEntity *) RefObj.m_odVerifySubEntityList[i];
+        m_odVerifySubEntityList.push_back(subEntity);
+    }
+    return *this;
+}
+

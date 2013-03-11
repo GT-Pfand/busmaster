@@ -41,7 +41,8 @@ class CTSEditorChildFrame : public CMDIChildWnd
     CBaseEntityTA* m_podCopyEntity;
     //Backup
     CSendEntity m_omSendEntity;
-    CVerifyEntity m_ouVerifyEntity;
+	//the currently opened verify entity
+    CVerifyEntity *m_ouVerifyEntity;
     BOOL m_bQueryConfirm;
     CMenu* m_pMainMenu;
     WINDOWPLACEMENT m_sTSDefPlacement;
@@ -99,13 +100,16 @@ private:
 
     void vDisplayHeaderInfo(INT /*nTestSetupIndex*/);
     void vDisplaySendInfo(CBaseEntityTA* pEntity);
-    void vDisplayVerifyInfo(CBaseEntityTA* pEntity, int nVerifyRowIndex = -1);
+    //void vDisplayVerifyInfo(CBaseEntityTA* pEntity, int nVerifyRowIndex = -1);
+	void vDisplayCommonVerifyInfo(CBaseEntityTA* pEntity, int nVerifyRowIndex, CVerifyData *pVerifyData);
     void vDisplayWaitInfo(CBaseEntityTA* pEntity);
     void vDisplayReplayInfo(CBaseEntityTA* pEntity);
     void vDisplaySendMessageInfo(CBaseEntityTA* pEntity);
     void vDisplayVerifyMessageInfo(CBaseEntityTA* pEntity);
+	void vDisplayVerifyMessageDlcInfo(CBaseEntityTA* pEntity);
     void vDisplayTestcaseInfo(CBaseEntityTA* pEntity);
     void vDisplayVerifyResponseInfo(CBaseEntityTA* pEntity);
+	void vDisplayVerifyDlcInfo(CBaseEntityTA* pEntity);
 
     void vSaveHeaderInfo(INT /*nTestSetupIndex*/);
     void vSaveTestcaseInfo(CBaseEntityTA* pEntity);
@@ -116,11 +120,13 @@ private:
     void vSaveWaitInfo(CBaseEntityTA* pEntity);
     void vSaveReplayInfo(CBaseEntityTA* pEntity);
     void vSaveVerfiyReponseInfo(CBaseEntityTA* m_pCurrentEntity);
+	void vSaveVerfiyDlcInfo(CBaseEntityTA* pEntity);
 
     void vHandleSendEntity(LPNMLISTVIEW pNMLV);
     void vHandleTestSetup(LPNMLISTVIEW pNMLV);
     void vHandleVerifyResponseEntity(LPNMLISTVIEW pNMLV);
     void vHandleVerifyEntity(LPNMLISTVIEW pNMLV);
+	void vHandleVerifyDlcEntity(LPNMLISTVIEW pNMLV);
 
     BOOL isParentChild(eTYPE_ENTITY eParent, eTYPE_ENTITY eChild);
     BOOL bEnablePase();
